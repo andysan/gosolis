@@ -32,8 +32,13 @@ type InverterConfig struct {
 	Timeout time.Duration
 }
 
+type DaemonConfig struct {
+	Interval time.Duration
+}
+
 type Config struct {
 	Inverter InverterConfig
+	Daemon   DaemonConfig
 }
 
 var (
@@ -164,6 +169,8 @@ func initConfig() {
 	viper.SetDefault("inverter.addr", 1)
 	viper.SetDefault("inverter.baud", 9600)
 	viper.SetDefault("inverter.timeout", 500*time.Millisecond)
+
+	viper.SetDefault("daemon.interval", 10*time.Second)
 
 	viper.SetEnvPrefix("gosolis")
 	viper.AutomaticEnv()
