@@ -34,6 +34,7 @@ type InverterConfig struct {
 
 type DaemonConfig struct {
 	Interval time.Duration
+	ProbeInterval time.Duration `mapstructure:"probe_interval"`
 }
 
 type Config struct {
@@ -171,6 +172,7 @@ func initConfig() {
 	viper.SetDefault("inverter.timeout", 500*time.Millisecond)
 
 	viper.SetDefault("daemon.interval", 10*time.Second)
+	viper.SetDefault("daemon.probe_interval", 1*time.Minute)
 
 	viper.SetEnvPrefix("gosolis")
 	viper.AutomaticEnv()
