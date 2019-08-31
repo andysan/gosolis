@@ -13,7 +13,6 @@ import (
 	"time"
 
 	solis "github.com/andysan/gosolis/pkg/gosolis"
-	homedir "github.com/mitchellh/go-homedir"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 	"github.com/tarm/serial"
@@ -136,7 +135,7 @@ func init() {
 	pfs := RootCmd.PersistentFlags()
 	pfs.StringVarP(
 		&cfgFile, "config", "c", "",
-		"config file (default is $HOME/.gosolis.yaml)")
+		"config file (default is /etc/gosolis.{yaml,json,...})")
 	RootCmd.PersistentFlags().StringP(
 		"port", "p", "",
 		"serial interface connected to inverter(s)")
@@ -156,14 +155,8 @@ func initConfig() {
 	if cfgFile != "" {
 		viper.SetConfigFile(cfgFile)
 	} else {
-		home, err := homedir.Dir()
-		if err != nil {
-			fmt.Println(err)
-			os.Exit(exitConfig)
-		}
-
-		viper.AddConfigPath(home)
-		viper.SetConfigName(".gosolis")
+		viper.AddConfigPath("/etc")
+		viper.SetConfigName("gosolis")
 	}
 
 	viper.SetDefault("inverter.port", "")
