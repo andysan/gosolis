@@ -97,6 +97,7 @@ type rawDeviceInfo struct {
 	LastMonthProd   uint16
 	TodayProd       uint16
 	YesterdayProd   uint16
+	SerialNo        [8]byte
 }
 
 type DeviceStatus uint8
@@ -115,6 +116,8 @@ type DeviceVersion uint8
 
 type PowerCurve uint8
 
+type DeviceSerialNumber [8]byte
+
 type DeviceInformation struct {
 	Inputs     []InputStatus
 	Grid       GridInformation
@@ -125,6 +128,7 @@ type DeviceInformation struct {
 
 	Product   DeviceProduct
 	SWVersion DeviceVersion
+	SerialNo  DeviceSerialNumber
 	Status    DeviceStatus
 	Error     DeviceError
 
@@ -242,6 +246,7 @@ func (rpi *rawDeviceInfo) DeviceInformation() *DeviceInformation {
 		Temperature: float32(rpi.Temp) / 10.0,
 		Product:     DeviceProduct(rpi.Product),
 		SWVersion:   DeviceVersion(rpi.SWVersion),
+		SerialNo:    DeviceSerialNumber(rpi.SerialNo),
 		Status:      DeviceStatus(rpi.Status),
 		Error:       DeviceError(rpi.Error),
 		PowerCurve:  PowerCurve(rpi.PowerCurve),

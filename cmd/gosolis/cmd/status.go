@@ -38,6 +38,7 @@ func statusMain(cmd *cobra.Command, args []string) {
 	fmt.Printf("Inverter:\n")
 	fmt.Printf("\tProduct type: %#x\n", di.Product)
 	fmt.Printf("\tSoftware version: %#x\n", di.SWVersion)
+	fmt.Printf("\tSerial: %#x\n", di.SerialNo)
 	fmt.Printf("\tTemperature: %.1f °C\n", di.Temperature)
 	fmt.Printf("\tStatus: %v\n", di.Status)
 	fmt.Printf("\tError code: %#.4x\n", di.Error)
