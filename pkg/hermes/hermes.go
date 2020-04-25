@@ -112,7 +112,7 @@ func (h *Hermes) propagate(m *Message) {
 	for i, b := range h.backend {
 		err := b.SendMessage(m)
 		if err != nil {
-			Log.Printf("Backend %u failed to send message: %s",
+			Log.Printf("Backend '%s' failed to send message: %s",
 				i, err)
 		}
 	}
