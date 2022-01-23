@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: Copyright 2019 Andreas Sandberg <andreas@sandberg.uk>
+ * SPDX-FileCopyrightText: Copyright 2019, 2022 Andreas Sandberg <andreas@sandberg.uk>
  *
  * SPDX-License-Identifier: BSD-3-Clause
  */
@@ -36,4 +36,11 @@ type Frame struct {
 	Command Command
 	Length  uint8
 	Data    []byte
+}
+
+type BusInterface interface {
+	ReadFrame() (*Frame, error)
+	ReadAckFrame() (*Frame, error)
+	WriteFrame(frame *Frame) error
+	WriteAck(dev DeviceId, cmd Command) error
 }

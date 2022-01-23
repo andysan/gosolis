@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: Copyright 2019 Andreas Sandberg <andreas@sandberg.uk>
+ * SPDX-FileCopyrightText: Copyright 2019, 2022 Andreas Sandberg <andreas@sandberg.uk>
  *
  * SPDX-License-Identifier: BSD-3-Clause
  */
@@ -21,9 +21,12 @@ const frameLength = 54
 // Length of an acknowledgement frame excluding start byte
 const ackFrameLength = 3
 
-type Bus struct {
+type SerialBus struct {
 	port io.ReadWriter
 }
+
+// Ensure that we satisfy the BusInterface interface
+var _ BusInterface = &SerialBus{}
 
 func calcChecksum(pkt []byte) uint8 {
 	checksum := uint8(0)
@@ -34,7 +37,7 @@ func calcChecksum(pkt []byte) uint8 {
 	return checksum
 }
 
-func (b *Bus) waitForStart() error {
+func (b *SerialBus) waitForStart() error {
 	buf := make([]byte, 1)
 	for {
 		if _, err := io.ReadFull(b.port, buf); err != nil {
@@ -49,13 +52,13 @@ func (b *Bus) waitForStart() error {
 
 // Instantiate a new bus interface using a ReadWriter interface connected to a
 // RS485 port.
-func NewBus(port io.ReadWriter) *Bus {
-	return &Bus{port}
+func NewSerialBus(port io.ReadWriter) *SerialBus {
+	return &SerialBus{port}
 }
 
 // Read a data fram from the inverter and return a frame. This
 // function may fail with ChecksumError and still return a frame.
-func (b *Bus) ReadFrame() (*Frame, error) {
+func (b *SerialBus) ReadFrame() (*Frame, error) {
 	if e := b.waitForStart(); e != nil {
 		return nil, e
 	}
@@ -80,7 +83,7 @@ func (b *Bus) ReadFrame() (*Frame, error) {
 	return &frame, nil
 }
 
-func (b *Bus) ReadAckFrame() (*Frame, error) {
+func (b *SerialBus) ReadAckFrame() (*Frame, error) {
 	if e := b.waitForStart(); e != nil {
 		return nil, e
 	}
@@ -98,11 +101,11 @@ func (b *Bus) ReadAckFrame() (*Frame, error) {
 	}
 }
 
-func (b *Bus) WriteFrame(frame *Frame) error {
+func (b *SerialBus) WriteFrame(frame *Frame) error {
 	return b.writeFrame(frame.Device, frame.Command, frame.Length, frame.Data)
 }
 
-func (b *Bus) writeFrame(dev DeviceId, cmd Command, length uint8, data []byte) error {
+func (b *SerialBus) writeFrame(dev DeviceId, cmd Command, length uint8, data []byte) error {
 	// Data won't fit in frame
 	if len(data) > maxDataLength {
 		return IllegalFrameError
@@ -119,7 +122,7 @@ func (b *Bus) writeFrame(dev DeviceId, cmd Command, length uint8, data []byte) e
 	return err
 }
 
-func (b *Bus) WriteAck(dev DeviceId, cmd Command) error {
+func (b *SerialBus) WriteAck(dev DeviceId, cmd Command) error {
 	buf := []byte{startByte, byte(dev), byte(cmd), byte(0)}
 
 	_, err := b.port.Write(buf)

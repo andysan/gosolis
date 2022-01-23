@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: Copyright 2019 Andreas Sandberg <andreas@sandberg.uk>
+ * SPDX-FileCopyrightText: Copyright 2019, 2022 Andreas Sandberg <andreas@sandberg.uk>
  *
  * SPDX-License-Identifier: BSD-3-Clause
  */
@@ -17,7 +17,7 @@ import (
 var IllegalResponseError = errors.New("Illegal response")
 
 type Device struct {
-	bus *Bus
+	bus BusInterface
 	dev DeviceId
 }
 
@@ -135,7 +135,7 @@ type DeviceInformation struct {
 }
 
 // Instantiate a Solis device interface
-func NewDevice(bus *Bus, dev DeviceId) *Device {
+func NewDevice(bus BusInterface, dev DeviceId) *Device {
 	return &Device{bus, dev}
 }
 

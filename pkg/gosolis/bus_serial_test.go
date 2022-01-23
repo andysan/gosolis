@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: Copyright 2019 Andreas Sandberg <andreas@sandberg.uk>
+ * SPDX-FileCopyrightText: Copyright 2019, 2022 Andreas Sandberg <andreas@sandberg.uk>
  *
  * SPDX-License-Identifier: BSD-3-Clause
  */
@@ -27,7 +27,7 @@ func TestChecksum(t *testing.T) {
 
 func testWaitForStart(t *testing.T, value []byte, expected error) *bytes.Buffer {
 	buf := bytes.NewBuffer(value)
-	s := NewBus(buf)
+	s := NewSerialBus(buf)
 	e := s.waitForStart()
 	if e != expected {
 		t.Errorf("Error in waitForStart(%v) = %v; want %v",
@@ -49,7 +49,7 @@ func TestWaitForStart(t *testing.T) {
 
 func readFrameBytes(value []byte) (*Frame, error) {
 	buf := bytes.NewBuffer(value)
-	s := NewBus(buf)
+	s := NewSerialBus(buf)
 	return s.ReadFrame()
 }
 
@@ -132,7 +132,7 @@ func TestReadFrame(t *testing.T) {
 
 func TestReadAckFrame(t *testing.T) {
 	buf := bytes.Buffer{}
-	s := NewBus(&buf)
+	s := NewSerialBus(&buf)
 
 	// Valid ACK
 	buf.Write([]byte{0x7e, 0x01, 0x02, 0x00})
@@ -178,7 +178,7 @@ func TestReadAckFrame(t *testing.T) {
 
 func TestWriteFrame(t *testing.T) {
 	buf := bytes.Buffer{}
-	s := NewBus(&buf)
+	s := NewSerialBus(&buf)
 
 	f := Frame{0x01, 0x42, 2, []byte{3, 4, 5}}
 	if e := s.WriteFrame(&f); e == nil {
@@ -205,7 +205,7 @@ func TestWriteFrame(t *testing.T) {
 
 func TestWriteAck(t *testing.T) {
 	buf := bytes.Buffer{}
-	s := NewBus(&buf)
+	s := NewSerialBus(&buf)
 	if e := s.WriteAck(DeviceId(0x10), Command(0x11)); e != nil {
 		t.Error(e)
 	}

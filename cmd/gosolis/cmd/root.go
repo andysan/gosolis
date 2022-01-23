@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: Copyright 2019 Andreas Sandberg <andreas@sandberg.uk>
+ * SPDX-FileCopyrightText: Copyright 2019, 2022 Andreas Sandberg <andreas@sandberg.uk>
  *
  * SPDX-License-Identifier: BSD-3-Clause
  */
@@ -46,7 +46,7 @@ var (
 )
 
 var (
-	solisBus    *solis.Bus
+	solisBus    solis.BusInterface
 	solisDevice *solis.Device
 )
 
@@ -63,7 +63,7 @@ func errComm(err error) {
 	}
 }
 
-func getBus() *solis.Bus {
+func getBus() solis.BusInterface {
 	if solisBus != nil {
 		return solisBus
 	}
@@ -87,7 +87,7 @@ func getBus() *solis.Bus {
 	timeout := config.Inverter.Timeout
 	trw := solis.NewTimeoutReadWriter(port, timeout, 16)
 
-	solisBus = solis.NewBus(trw)
+	solisBus = solis.NewSerialBus(trw)
 
 	return solisBus
 }
