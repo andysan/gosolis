@@ -39,8 +39,8 @@ func waitForDevice(dev *solis.Device) {
 		if err := dev.Ping(); err == nil {
 			log.Println("Device online...")
 			return
-		} else if (err != solis.PortTimeoutError) {
-			log.Println("Unhandled device error:",  err)
+		} else if err != solis.PortTimeoutError {
+			log.Println("Unhandled device error:", err)
 			os.Exit(exitSerial)
 		}
 	}
@@ -64,7 +64,7 @@ func daemonMain(cmd *cobra.Command, args []string) {
 	if err := dev.Ping(); err == solis.PortTimeoutError {
 		waitForDevice(dev)
 	} else if err != nil {
-		log.Println("Unhandled device error:",  err)
+		log.Println("Unhandled device error:", err)
 		os.Exit(exitSerial)
 	}
 

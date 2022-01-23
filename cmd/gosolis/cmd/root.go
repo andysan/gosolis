@@ -31,7 +31,7 @@ type InverterConfig struct {
 }
 
 type DaemonConfig struct {
-	Interval time.Duration
+	Interval      time.Duration
 	ProbeInterval time.Duration `mapstructure:"probe_interval"`
 }
 
