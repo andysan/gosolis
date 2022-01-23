@@ -1,3 +1,8 @@
+<!--
+SPDX-FileCopyrightText: Copyright 2019 Andreas Sandberg <andreas@sandberg.uk>
+
+SPDX-License-Identifier: BSD-3-Clause
+-->
 
 # Framing
 
