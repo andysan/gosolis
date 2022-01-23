@@ -1,11 +1,12 @@
 <!--
-SPDX-FileCopyrightText: Copyright 2019-2020 Andreas Sandberg <andreas@sandberg.uk>
+SPDX-FileCopyrightText: Copyright 2019-2020, 2022 Andreas Sandberg <andreas@sandberg.uk>
 
 SPDX-License-Identifier: BSD-3-Clause
 -->
 
 [![Go Report Card](https://goreportcard.com/badge/github.com/andysan/gosolis)](https://goreportcard.com/report/github.com/andysan/gosolis)
 [![CI](https://github.com/andysan/gosolis/workflows/CI/badge.svg)](https://github.com/andysan/gosolis/actions?query=workflow%3ACI)
+[![REUSE license linter](https://github.com/andysan/gosolis/workflows/REUSE/badge.svg)](https://github.com/andysan/gosolis/actions?query=workflow%3AREUSE)
 
 # What is GoSolis?
 
