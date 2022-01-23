@@ -1,3 +1,9 @@
+//
+// SPDX-FileCopyrightText: Copyright 2019 Andreas Sandberg <andreas@sandberg.uk>
+//
+// SPDX-License-Identifier: BSD-3-Clause
+//
+
 module github.com/andysan/gosolis
 
 go 1.12
