@@ -24,6 +24,7 @@ const (
 )
 
 type InverterConfig struct {
+	Type    string
 	Port    string
 	Addr    solis.DeviceId
 	Baud    uint
@@ -63,11 +64,7 @@ func errComm(err error) {
 	}
 }
 
-func getBus() solis.BusInterface {
-	if solisBus != nil {
-		return solisBus
-	}
-
+func createBusSerial() solis.BusInterface {
 	if config.Inverter.Port == "" {
 		fmt.Println("No serial port specified")
 		os.Exit(exitUsage)
@@ -87,7 +84,20 @@ func getBus() solis.BusInterface {
 	timeout := config.Inverter.Timeout
 	trw := solis.NewTimeoutReadWriter(port, timeout, 16)
 
-	solisBus = solis.NewSerialBus(trw)
+	return solis.NewSerialBus(trw)
+}
+
+func getBus() solis.BusInterface {
+	if solisBus != nil {
+		return solisBus
+	}
+
+	switch config.Inverter.Type {
+	case "serial":
+		solisBus = createBusSerial()
+	default:
+		fmt.Printf("Incorrect bus type: %s\n", config.Inverter.Type)
+	}
 
 	return solisBus
 }
@@ -136,6 +146,9 @@ func init() {
 		&cfgFile, "config", "c", "",
 		"config file (default is /etc/gosolis.{yaml,json,...})")
 	RootCmd.PersistentFlags().StringP(
+		"bus-type", "b", "serial",
+		"device type (serial or test)")
+	RootCmd.PersistentFlags().StringP(
 		"port", "p", "",
 		"serial interface connected to inverter(s)")
 	RootCmd.PersistentFlags().IntP(
@@ -145,6 +158,7 @@ func init() {
 		"timeout", "t", 100,
 		"Timeout in milliseconds")
 
+	errPanic(viper.BindPFlag("inverter.type", pfs.Lookup("bus-type")))
 	errPanic(viper.BindPFlag("inverter.port", pfs.Lookup("port")))
 	errPanic(viper.BindPFlag("inverter.addr", pfs.Lookup("addr")))
 	errPanic(viper.BindPFlag("inverter.timeout", pfs.Lookup("timeout")))
@@ -158,6 +172,7 @@ func initConfig() {
 		viper.SetConfigName("gosolis")
 	}
 
+	viper.SetDefault("inverter.type", "serial")
 	viper.SetDefault("inverter.port", "")
 	viper.SetDefault("inverter.addr", 1)
 	viper.SetDefault("inverter.baud", 9600)
