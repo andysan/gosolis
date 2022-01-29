@@ -87,6 +87,15 @@ func createBusSerial() solis.BusInterface {
 	return solis.NewSerialBus(trw)
 }
 
+func createBusDemo() solis.BusInterface {
+	bus := solis.NewLocalBus(1)
+
+	de := solis.NewDeviceEmulator(bus.Interfaces[0], solis.DeviceId(1))
+	go de.Run()
+
+	return bus
+}
+
 func getBus() solis.BusInterface {
 	if solisBus != nil {
 		return solisBus
@@ -95,6 +104,8 @@ func getBus() solis.BusInterface {
 	switch config.Inverter.Type {
 	case "serial":
 		solisBus = createBusSerial()
+	case "demo":
+		solisBus = createBusDemo()
 	default:
 		fmt.Printf("Incorrect bus type: %s\n", config.Inverter.Type)
 	}
