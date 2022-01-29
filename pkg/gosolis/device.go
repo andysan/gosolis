@@ -99,7 +99,7 @@ type rawDeviceInfo struct {
 	SerialNo        [8]byte
 }
 
-type DeviceStatus uint8
+type DeviceStatus uint16
 
 const ()
 
