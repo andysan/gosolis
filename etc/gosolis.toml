@@ -26,11 +26,19 @@ timeout = "500ms"
 # * "mqtt"
 type="mqtt"
 
-# MQTT server URL
+# MQTT server URL. Use tls:// to enable TLS.
 url="tcp://localhost:1883"
 
 # MQTT client ID to present to broker.
 client_id="go_solis"
+
+# To use TLS authentication, specify a certificate and a private key.
+auth_cert = "certificate.pem"
+auth_key = "private.pem"
+
+# Certificate authorities accepted when verifying remote. Leave empty
+# to use the the system's default CAs.
+ca_certs = [ "ca1.pem", "ca2.pem" ]
 
 [[hermes.broker0.topic]]
 # MQTT topic

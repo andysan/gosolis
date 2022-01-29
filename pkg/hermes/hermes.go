@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: Copyright 2019 Andreas Sandberg <andreas@sandberg.uk>
+ * SPDX-FileCopyrightText: Copyright 2019, 2022 Andreas Sandberg <andreas@sandberg.uk>
  *
  * SPDX-License-Identifier: BSD-3-Clause
  */
@@ -30,7 +30,7 @@ type Backend interface {
 }
 
 type BackendFactory struct {
-	CreateViper func(viper *viper.Viper) (Backend, error)
+	CreateViper func(viper *viper.Viper, basePath string) (Backend, error)
 }
 
 type Hermes struct {
@@ -40,7 +40,7 @@ type Hermes struct {
 
 var Backends map[string]BackendFactory = make(map[string]BackendFactory)
 
-func NewViper(v *viper.Viper) *Hermes {
+func NewViper(v *viper.Viper, basePath string) *Hermes {
 	settings := v.AllSettings()
 	h := Hermes{
 		mailbox: make(chan *Message),
@@ -64,7 +64,7 @@ func NewViper(v *viper.Viper) *Hermes {
 		}
 
 		Log.Printf("Creating backend '%s' of type '%s'...", name, t)
-		if b, err := bf.CreateViper(sub); err == nil {
+		if b, err := bf.CreateViper(sub, basePath); err == nil {
 			h.backend[name] = b
 		} else {
 			Log.Print("Failed to create backend: ", err)

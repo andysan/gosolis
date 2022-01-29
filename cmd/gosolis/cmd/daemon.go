@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: Copyright 2019 Andreas Sandberg <andreas@sandberg.uk>
+ * SPDX-FileCopyrightText: Copyright 2019, 2022 Andreas Sandberg <andreas@sandberg.uk>
  *
  * SPDX-License-Identifier: BSD-3-Clause
  */
@@ -52,7 +52,7 @@ func daemonMain(cmd *cobra.Command, args []string) {
 		log.Fatal("Hermes not configured")
 	}
 
-	bus := hermes.NewViper(h)
+	bus := hermes.NewViper(h, cfgBase)
 	if bus == nil {
 		log.Fatal("Failed to create Hermes backend")
 	}

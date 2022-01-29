@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: Copyright 2019 Andreas Sandberg <andreas@sandberg.uk>
+ * SPDX-FileCopyrightText: Copyright 2019, 2022 Andreas Sandberg <andreas@sandberg.uk>
  *
  * SPDX-License-Identifier: BSD-3-Clause
  */
@@ -8,8 +8,14 @@ package hermes
 
 import (
 	"fmt"
+	"os"
 	"reflect"
 	"strings"
+
+	"crypto/tls"
+	"crypto/x509"
+
+	"path/filepath"
 
 	mqtt "github.com/eclipse/paho.mqtt.golang"
 	"github.com/mitchellh/mapstructure"
@@ -24,9 +30,14 @@ type MqttTopic struct {
 }
 
 type MqttConfig struct {
+	basePath string
 	URL      string
-	ClientID string `mapstructure:"client_id"`
-	Topic    []MqttTopic
+	ClientID string   `mapstructure:"client_id"`
+	AuthCert string   `mapstructure:"auth_cert"`
+	AuthKey  string   `mapstructure:"auth_key"`
+	CaCerts  []string `mapstructure:"ca_certs"`
+
+	Topic []MqttTopic
 }
 
 type Mqtt struct {
@@ -47,8 +58,10 @@ func stringToMessageFormatter(from reflect.Type, to reflect.Type,
 	return createFormatter(raw)
 }
 
-func mqttCreateViper(subv *viper.Viper) (Backend, error) {
-	cfg := MqttConfig{}
+func mqttCreateViper(subv *viper.Viper, basePath string) (Backend, error) {
+	cfg := MqttConfig{
+		basePath: basePath,
+	}
 
 	hooks := viper.DecodeHook(
 		mapstructure.ComposeDecodeHookFunc(
@@ -60,9 +73,7 @@ func mqttCreateViper(subv *viper.Viper) (Backend, error) {
 		return nil, err
 	}
 
-	cli := cfg.Create()
-
-	return cli, nil
+	return cfg.Create()
 }
 
 func init() {
@@ -73,9 +84,73 @@ func init() {
 	Backends["mqtt"] = bf
 }
 
-func (mc *MqttConfig) Create() *Mqtt {
+func (mc *MqttConfig) certPath(name string) string {
+	if filepath.IsAbs(name) {
+		return name
+	} else {
+		return filepath.Join(mc.basePath, name)
+	}
+}
+
+func (mc *MqttConfig) tlsConfig() (*tls.Config, error) {
+	config := &tls.Config{}
+
+	/* Setup TLS authentication using client ceritficates */
+	if mc.AuthCert != "" || mc.AuthKey != "" {
+		if mc.AuthCert == "" || mc.AuthKey == "" {
+			return nil, fmt.Errorf("Public key authentication requires both a certificate and key")
+		}
+
+		cert, err := tls.LoadX509KeyPair(
+			mc.certPath(mc.AuthCert),
+			mc.certPath(mc.AuthKey))
+		if err != nil {
+			return nil, fmt.Errorf("Failed to load client certificate: %s", err)
+		}
+
+		config.Certificates = []tls.Certificate{cert}
+	}
+
+	/* Setup user-provided CA certificates. Use the system's CA
+	 * pool if no CA certificates provided.
+	 */
+	if mc.CaCerts == nil {
+		ca_pool, err := x509.SystemCertPool()
+		if err != nil {
+			return nil, fmt.Errorf("Failed to load system CA pool: %s", err)
+		}
+		config.RootCAs = ca_pool
+	} else {
+		config.RootCAs = x509.NewCertPool()
+	}
+
+	for _, value := range mc.CaCerts {
+		pem, err := os.ReadFile(mc.certPath(value))
+		if err != nil {
+			return nil, fmt.Errorf("Failed to load CA cert: %s", err)
+		}
+
+		if !config.RootCAs.AppendCertsFromPEM(pem) {
+			return nil, fmt.Errorf("Failed to add CA '%s' to pool", value)
+		}
+	}
+
+	return config, nil
+}
+
+func (mc *MqttConfig) Create() (*Mqtt, error) {
 	cli := Mqtt{
 		config: mc,
+	}
+
+	// Resolve files relative the the current working directory if
+	// basePath hasn't been set by mqttCreateViper
+	if mc.basePath == "" {
+		if pwd, err := os.Getwd(); err == nil {
+			mc.basePath = pwd
+		} else {
+			return nil, err
+		}
 	}
 
 	opts := mqtt.NewClientOptions()
@@ -83,9 +158,15 @@ func (mc *MqttConfig) Create() *Mqtt {
 	opts.AddBroker(mc.URL)
 	opts.SetClientID(mc.ClientID)
 
+	if tls, err := mc.tlsConfig(); err == nil {
+		opts.SetTLSConfig(tls)
+	} else {
+		return nil, err
+	}
+
 	cli.client = mqtt.NewClient(opts)
 
-	return &cli
+	return &cli, nil
 }
 
 func sync(t mqtt.Token) error {

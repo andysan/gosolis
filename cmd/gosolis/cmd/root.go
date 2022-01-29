@@ -11,6 +11,8 @@ import (
 	"os"
 	"time"
 
+	"path/filepath"
+
 	solis "github.com/andysan/gosolis/pkg/gosolis"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -43,6 +45,7 @@ type Config struct {
 
 var (
 	cfgFile string
+	cfgBase string
 	config  Config
 )
 
@@ -201,6 +204,9 @@ func initConfig() {
 			os.Exit(exitConfig)
 		}
 	} else {
-		fmt.Println("Using config file:", viper.ConfigFileUsed())
+		cfgPath := viper.ConfigFileUsed()
+		cfgBase = filepath.Dir(cfgPath)
+
+		fmt.Println("Using config file:", cfgPath)
 	}
 }
