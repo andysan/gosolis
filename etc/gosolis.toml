@@ -1,0 +1,49 @@
+#
+# SPDX-FileCopyrightText: Copyright 2022 Andreas Sandberg <andreas@sandberg.uk>
+#
+# SPDX-License-Identifier: 0BSD
+#
+[daemon]
+interval = "10s"
+probe_interval = "1m0s"
+
+[inverter]
+addr = 1
+# Bus type for this device. Supported values:
+# * "serial" - Serial connection to one or more devices
+# * "demo" - The demo bus contains a single device
+bus = "serial"
+baud = 9600
+port = "/dev/ttyACM0"
+timeout = "500ms"
+
+[hermes.broker0]
+# Multiple Hermes backends may be specified for message delivery to
+# different MQTT brokers. Each subsection of the hermes section
+# defines a new backend.
+
+# Broker type. Supported values:
+# * "mqtt"
+type="mqtt"
+
+# MQTT server URL
+url="tcp://localhost:1883"
+
+# MQTT client ID to present to broker.
+client_id="go_solis"
+
+[[hermes.broker0.topic]]
+# MQTT topic
+topic="gosolis/1"
+# MQTT QOS value:
+# 0: Best effort delivery, deliver at most once.
+# 1: Guaranteed delivery. Duplicates allowed.
+# 2: Guaranteed delivery. Duplicates not allowed.
+qos=0
+# Should the last value be stored in the broker?
+retained=false
+# Format of data pushed to MQTT broker. Supported values:
+# * json: JSON dictionary of representing the state of the inverter.
+# * value: Push to multiple sub-topics, value only.
+# * time-value: Push to multiple sub-topcis. Prefix values with UNIX time.
+format="json"
