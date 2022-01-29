@@ -10,6 +10,7 @@ import (
 	"bytes"
 	"encoding/binary"
 	"errors"
+	"math"
 )
 
 // Illegal response received. This can be caused by an unexpected
@@ -50,29 +51,29 @@ type GridStatus uint8
 const ()
 
 type InputStatus struct {
-	Voltage float32
-	Current float32
+	Voltage float64
+	Current float64
 }
 
 type GridInformation struct {
-	Voltage       float32
-	Current       float32
-	Frequency     float32
+	Voltage       float64
+	Current       float64
+	Frequency     float64
 	PowerStandard PowerStandard
 	GridStatus    GridStatus
 }
 
 type ProductionInformation struct {
 	// Lifetime production (kWh)
-	Total float32
+	Total float64
 	// Production this month  (kWh)
-	Month float32
+	Month float64
 	// Production last month  (kWh)
-	LastMonth float32
+	LastMonth float64
 	// Production today  (kWh)
-	Today float32
+	Today float64
 	// Production yesterday  (kWh)
-	Yesterday float32
+	Yesterday float64
 }
 
 type rawDeviceInfo struct {
@@ -123,7 +124,7 @@ type DeviceInformation struct {
 	Production ProductionInformation
 
 	// Temperature (°C)
-	Temperature float32
+	Temperature float64
 
 	Product   DeviceProduct
 	SWVersion DeviceVersion
@@ -216,33 +217,78 @@ func (rpi *rawDeviceInfo) UnmarshalBinary(data []byte) error {
 	return binary.Read(r, binary.LittleEndian, rpi)
 }
 
+func (rpi *rawDeviceInfo) MarshalBinary() ([]byte, error) {
+	buf := new(bytes.Buffer)
+	binary.Write(buf, binary.LittleEndian, rpi)
+
+	return buf.Bytes(), nil
+}
+
+func (di *DeviceInformation) rawDeviceInfo() (*rawDeviceInfo, error) {
+	if len(di.Inputs) > 2 {
+		return nil, IllegalResponseError
+	}
+
+	rdi := rawDeviceInfo{
+		VGrid:           uint16(math.Round(di.Grid.Voltage * 10)),
+		IGrid:           uint16(math.Round(di.Grid.Current * 10)),
+		Temp:            uint16(math.Round(di.Temperature * 10)),
+		TotalProduction: uint32(math.Round(di.Production.Total)),
+		Status:          uint16(di.Status),
+		Error:           uint16(di.Error),
+		Product:         uint8(di.Product),
+		SWVersion:       uint8(di.SWVersion),
+		GridFreq:        uint16(math.Round(di.Grid.Frequency * 100)),
+		PowerStd:        uint8(di.Grid.PowerStandard),
+		PowerCurve:      uint8(di.PowerCurve),
+		GridStatus:      uint8(di.Grid.GridStatus),
+		MonthProd:       uint16(math.Round(di.Production.Month)),
+		LastMonthProd:   uint16(math.Round(di.Production.LastMonth)),
+		TodayProd:       uint16(math.Round(di.Production.Today * 10)),
+		YesterdayProd:   uint16(math.Round(di.Production.Yesterday * 10)),
+		SerialNo:        [8]byte(di.SerialNo),
+	}
+
+	if len(di.Inputs) >= 1 {
+		rdi.VIn = uint16(math.Round(di.Inputs[0].Voltage * 10))
+		rdi.IIn = uint16(math.Round(di.Inputs[0].Current * 10))
+	}
+
+	if len(di.Inputs) >= 2 {
+		rdi.V2In = uint16(math.Round(di.Inputs[1].Voltage * 10))
+		rdi.I2In = uint16(math.Round(di.Inputs[1].Current * 10))
+	}
+
+	return &rdi, nil
+}
+
 func (rpi *rawDeviceInfo) DeviceInformation() *DeviceInformation {
 	pi := DeviceInformation{
 		Inputs: []InputStatus{
 			InputStatus{
-				Voltage: float32(rpi.VIn) / 10.0,
-				Current: float32(rpi.IIn) / 10.0,
+				Voltage: float64(rpi.VIn) / 10.0,
+				Current: float64(rpi.IIn) / 10.0,
 			},
 			InputStatus{
-				Voltage: float32(rpi.V2In) / 10.0,
-				Current: float32(rpi.I2In) / 10.0,
+				Voltage: float64(rpi.V2In) / 10.0,
+				Current: float64(rpi.I2In) / 10.0,
 			},
 		},
 		Grid: GridInformation{
-			Voltage:       float32(rpi.VGrid) / 10.0,
-			Current:       float32(rpi.IGrid) / 10.0,
-			Frequency:     float32(rpi.GridFreq) / 100.0,
+			Voltage:       float64(rpi.VGrid) / 10.0,
+			Current:       float64(rpi.IGrid) / 10.0,
+			Frequency:     float64(rpi.GridFreq) / 100.0,
 			PowerStandard: PowerStandard(rpi.PowerStd),
 			GridStatus:    GridStatus(rpi.GridStatus),
 		},
 		Production: ProductionInformation{
-			Total:     float32(rpi.TotalProduction),
-			Month:     float32(rpi.MonthProd),
-			LastMonth: float32(rpi.LastMonthProd),
-			Today:     float32(rpi.TodayProd) / 10.0,
-			Yesterday: float32(rpi.YesterdayProd) / 10.0,
+			Total:     float64(rpi.TotalProduction),
+			Month:     float64(rpi.MonthProd),
+			LastMonth: float64(rpi.LastMonthProd),
+			Today:     float64(rpi.TodayProd) / 10.0,
+			Yesterday: float64(rpi.YesterdayProd) / 10.0,
 		},
-		Temperature: float32(rpi.Temp) / 10.0,
+		Temperature: float64(rpi.Temp) / 10.0,
 		Product:     DeviceProduct(rpi.Product),
 		SWVersion:   DeviceVersion(rpi.SWVersion),
 		SerialNo:    DeviceSerialNumber(rpi.SerialNo),
