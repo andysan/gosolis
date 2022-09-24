@@ -97,8 +97,6 @@ func (h *Hermes) Send(message map[string]interface{}) error {
 	default:
 		return BackendBlocked
 	}
-
-	return nil
 }
 
 func (h *Hermes) distributor() {
